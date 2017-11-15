@@ -687,6 +687,7 @@
      */
     function regressToLoanDetails() {
       $('#basic-information').fadeIn(300);
+       dom.$rate_list_error.fadeOut(300);
       dom.$user_registration__wrapper
         .add(dom.$loan_summary)
         .add(dom.$ratetype_form__wrapper)
