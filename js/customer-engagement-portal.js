@@ -93,9 +93,10 @@
 
         'program_product_sort': {
           'CONFORMING':     100,
-          'NONCONFORMING':  200,
-          'FHA':            300,
-          'FHA-Streamline': 400
+          'DELEGATED JUMBO':200,
+          'NONCONFORMING':  300,
+          'FHA':            400,
+          'FHA-Streamline': 500
         },
 
         'program_name_sort': {
@@ -1966,7 +1967,7 @@
       });
 
       for(var i = programs.length-1; i >= 0; i--) {
-        if(programs[i].product_type != "NONCONFORMING") {
+        if(programs[i].product_type != "NONCONFORMING" && programs[i].product_type != 'DELEGATED JUMBO') {
           programs.product_type = 'removeNonCon';
           break;
         }
@@ -1974,7 +1975,7 @@
     
       for(var j = programs.length-1; j >= 0; j--) {
         if(programs.product_type == 'removeNonCon') {
-          if(programs[j].product_type == "NONCONFORMING") {
+          if(programs[j].product_type == "NONCONFORMING" || programs[j].product_type == 'DELEGATED JUMBO') {
             programs.splice(j, 1);
           }
         }
