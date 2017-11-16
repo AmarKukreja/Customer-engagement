@@ -793,10 +793,10 @@ input[type=range]::-webkit-slider-thumb {
       <div class="o-layout">
         <div class="o-layout__item u-1/1 c-rates-listing">
           <!-- <h5>Select your preferred loan option:</h5> -->
-          <table class="c-rates-listing__header u-margin-bottom-tiny">
+          <table class="c-rates-listing__header u-margin-bottom-tiny" style="border: 1px solid #DDDDDD;line-height: 30px;margin-bottom: -1px !important;">
             <thead>
               <tr>
-                <th class="c-rates-listing__program-shim"></th>
+                <th class="c-rates-listing__program-shim">Term</th>
                 <th class="c-rates-listing__heading c-rates-listing__heading--rate">Rate
                   <button class="c-btn c-btn--icon c-btn--nopad c-rates-listing__heading--tooltip c-rates-listing--verbose" data-js="trigger-tooltip" data-tooltip-name="rate">
                     <span class="u-hidden-visually">“Rate” Description</span><span class="o-icon o-icon--tooltip-help"></span>
@@ -851,7 +851,7 @@ input[type=range]::-webkit-slider-thumb {
               </div>
             </div>
           </div>
-		  <div class="table-body">
+		  <div class="table-body" style="border:1px solid #DDDDDD;">
           {{#each programs}}
           <table class="c-rates-listing__program c-rates-listing__program_new" data-js-program-id="{{@index}}">
            	<caption class="rate_table_caption">
