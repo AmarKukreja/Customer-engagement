@@ -489,6 +489,49 @@
         $('.zipcode_error').css('display','none');
       }
     }
+    $('#email').blur(function(){   
+    // userRegistrationFormValidation();   
+      if($('#email').val()!="" && $('#email').val()!=undefined){
+        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+        if(pattern.test($('#email').val())){
+              var data={};
+              data.user={emailId:$('#email').val() + ":" + new Date().getTimezoneOffset()};
+                $.ajax({
+                url : API_URL_PREFIX+'shopper/validate',
+                type : 'POST',
+                dataType : 'text',
+                data : {'registrationDetails' : JSON.stringify(data)},
+                success : function(response) {
+                  var result = JSON.parse(response);
+                  if(result.resultObject) {
+                    $('.user-registration-error').hide();
+                      $('#registration-error').text("");
+                    $('#createAccSubmit').attr("disabled",false);        
+                    $('#createAccSubmit').css({"background-color":"rgb(253, 138, 16)"});
+                  }
+
+                  if(result.error) {
+                    if(result.error.message != "" && result.error.message != undefined) {
+                      $('.user-registration-error').show();
+                      $('#registration-error').text(result.error.message);
+                       $('#createAccSubmit').attr("disabled",true);
+                       $('#createAccSubmit').css({"background-color":"#d3d3d3"});
+                    }
+                  }
+                },
+                error: function (xhr) {
+                  console.log(xhr);
+                }
+              });
+        }else{
+             $('.user-registration-error').show();
+             $('#registration-error').text("Please enter  valid Email Id.");
+              $('#createAccSubmit').attr("disabled",true);
+              $('#createAccSubmit').css({"background-color":"#d3d3d3"});
+        }
+      }
+     
+    });
 
     $('#zipcodeMobile').blur(validateMobilezipcode).keyup(validateMobilezipcode);
     $("#zipcodeMobile").bind('paste', function(e) {
@@ -548,7 +591,9 @@
             },
             email: {
               required : true,
-              email : true
+              //email : true,
+              emailValidation:true
+
             },
             primaryPhone: {
               required : true,
@@ -1503,7 +1548,6 @@
         data : {'registrationDetails' : JSON.stringify(request_data)},
         success : function(response) {
           var result = JSON.parse(response);
-          console.log(result);
           if(result.resultObject) {
             console.log('validation success');
             $('.user-registration-error').hide();
@@ -1634,8 +1678,20 @@
             false;
           }          
         }
-      }, 'Please enter a valid primary phone.');      
+      }, 'Please enter a valid primary phone.');   
+     
+      $.validator.addMethod('emailValidation', function(value, element) {
+        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+        if(pattern.test(value)){
+          return true;
+        }else{
+          return false;
+        }
+      }, 'Please enter  valid Email Id.');      
     }
+
+       
+    
 
     /**
      * Helper to get a property value as a float from any object that has
