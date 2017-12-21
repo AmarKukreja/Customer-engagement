@@ -962,6 +962,12 @@ input[type=range]::-webkit-slider-thumb {
                 <td class="c-rates-detail__item-value">${{currencyNumberNoCents rate.third_party_costs.recording_fees}}</td>
               </tr>
               {{/if}}
+              {{#if rate.third_party_costs.ca_recording_fees}}
+              <tr class="c-rates-detail__item">
+                <td class="c-rates-detail__item-label">CA Recording Fee</td>
+                <td class="c-rates-detail__item-value">${{currencyNumberNoCents rate.third_party_costs.ca_recording_fees}}</td>
+              </tr>
+              {{/if}}
               <tr class="c-rates-detail__item">
                 <td class="c-rates-detail__item-label">Notary Fee</td>
                 <td class="c-rates-detail__item-value">${{currencyNumberNoCents rate.third_party_costs.notaryfee1110}}</td>
