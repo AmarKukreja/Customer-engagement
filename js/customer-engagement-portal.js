@@ -307,7 +307,7 @@
           onkeyup: false,
           messages: {
             zipcode: {
-              remote:  jQuery.validator.format("Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR or WA")
+              remote:  jQuery.validator.format("Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR, WA or MD")
             }
           },
           rules: {
@@ -1665,7 +1665,7 @@
         } else {
           return true;
         }
-      }, 'Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR or WA');
+      }, 'Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR, WA or MD');
 
       $.validator.addMethod('phoneNumberValidation', function(value, element) {
         var val = value ? value.replace(/[()$,\s-]/g, '').trim() : "";
