@@ -5,8 +5,8 @@
 ;(function ($, window, document, undefined) {
   // Postpone execution until DOM is loaded
   $(function() {
-    var API_URL_PREFIX = "../NewfiWeb/rest/";
-  // var API_URL_PREFIX = "https://pg1.newfi.com/NewfiWeb/rest/";
+    var API_URL_PREFIX = "../loancenter/rest/";
+  // var API_URL_PREFIX = "https://pg1.newfi.com/loancenter/rest/";
     /**
      * Setup several app-wide collections:
      * 1. dict:
@@ -1279,7 +1279,7 @@
      */
     function populateLoanAdvisorListFromRemote() {
       jQuery.ajax({
-        url:      '/NewfiWeb/rest/shopper/lasearch',
+        url:      '/loancenter/rest/shopper/lasearch',
         type:     'GET',
         datatype: 'application/json',
         data:     request_obj,
