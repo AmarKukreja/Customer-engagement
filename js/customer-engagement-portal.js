@@ -2104,9 +2104,26 @@
           programs[i].rates = sortedByRate;  
        }          
       }
-
+	  var sortingArray=["30", "20", "15","10","7","5"];
+	  var finalSortedArray= [];
+	  var resultsnew=programs;
+	  for(i=0;i<sortingArray.length;i++){
+		  for(j=0;j<resultsnew.length;j++){
+			 // console.log(resultsnew[j].display_name);
+			  var programName=resultsnew[j].display_name;
+			  programName=programName.toLowerCase();
+			  var words = programName.split(" ");
+			if(words[0] === sortingArray[i]) {
+				 finalSortedArray.push(resultsnew[j]);
+				//console.log(finalSortedArray);
+			}
+			
+		  }
+	  }  
+				        
       // Add index properties to programs and rates, to be used in templates
-      return {'programs': programs};
+     // return {'programs': programs};
+	 return {'programs': finalSortedArray};
     }
     
    // Nav collaps in xs
