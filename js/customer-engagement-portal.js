@@ -2024,7 +2024,8 @@
       });
 
       for(var i = programs.length-1; i >= 0; i--) {
-        if(programs[i].product_type != "NONCONFORMING" && programs[i].product_type != 'DELEGATED JUMBO') {
+       // programs[i].product_type != "NONCONFORMING" &&
+        if(programs[i].product_type != 'DELEGATED JUMBO') {
           programs.product_type = 'removeNonCon';
           break;
         }
@@ -2032,7 +2033,8 @@
     
       for(var j = programs.length-1; j >= 0; j--) {
         if(programs.product_type == 'removeNonCon') {
-          if(programs[j].product_type == "NONCONFORMING" || programs[j].product_type == 'DELEGATED JUMBO') {
+         // programs[j].product_type == "NONCONFORMING" ||
+          if(programs[j].product_type == 'DELEGATED JUMBO') {
             programs.splice(j, 1);
           }
         }
