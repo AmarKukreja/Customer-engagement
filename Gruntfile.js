@@ -70,7 +70,8 @@ module.exports = function(grunt) {
 			prod: {
 				files: {
 					'prod/index.html' : ['index.html'],
-					'prod/thankYouPage.html' : ['thankYouPage.html']
+					'prod/thankYouPage.html' : ['thankYouPage.html'],
+					'prod/404.html' : ['404.html']
 				}
 			}
     },
@@ -103,6 +104,7 @@ module.exports = function(grunt) {
 						'./js/vendors/jquery.validate.js',
 						'./js/jquery-ui.min.js',
 						'./js/js_cookie.js',
+						'./js/jquery.mask.min.js',						
 						'./js/vendors/handlebars.min-v4.0.5.js',
 						'./js/vendors/bootstrap.custom.js',
 						'./js/vendors/rangeslider.js',
@@ -114,7 +116,8 @@ module.exports = function(grunt) {
 						'./js/components/c-currency-input.js',
 						'./js/components/c-radio.js',
 						'./js/mobilenav.js',
-						'./js/customer-engagement-portal.js'
+						'./js/customer-engagement-portal.js',
+						'./js/ion.rangeSlider.js'
 						]
 				}
 			}
@@ -125,8 +128,18 @@ module.exports = function(grunt) {
 					{expand: true, src: ['css/icons/png/**'], dest: 'prod'},
 					{expand: true, src: ['css/icons/*.css'], dest: 'prod'},
 					{expand: true, src: ['js/vendors/jquery-*.min.js'], dest: 'prod'},
-					{expand: true, src: ['js/vendors/js_cookie.js'], dest: 'prod'}
-				],
+					{expand: true, src: ['js/vendors/jquery.mask.min.js'], dest: 'prod'},
+					{expand: true, src: ['js/vendors/js_cookie.js'], dest: 'prod'},
+					{expand: true, src: ['js/vendors/bootstrap.custom.js'], dest: 'prod'},
+					{expand: true, src: ['js/mobilenav.js'], dest: 'prod'},
+					{expand: true, src: ['images/*'], dest: 'prod'},
+					{expand: true, src: ['css/ion.rangeSlider.css'], dest: 'prod'},
+					{expand: true, src: ['css/ion.rangeSlider.skinHTML5.css'], dest: 'prod'},
+					{expand: true, src: ['css/normalize.css'], dest: 'prod'},
+					{expand: true, src: ['css/style.css'], dest: 'prod'},
+					{expand: true, src: ['fonts/**'], dest: 'prod'},
+					{expand: true, src: ['WEB-INF/*'], dest: 'prod'}
+				],				
 			},
 		},
 		htmlmin: {

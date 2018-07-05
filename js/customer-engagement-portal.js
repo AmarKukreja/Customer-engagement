@@ -5,7 +5,8 @@
 ;(function ($, window, document, undefined) {
   // Postpone execution until DOM is loaded
   $(function() {
-    var API_URL_PREFIX = "../NewfiWeb/rest/";
+    var API_URL_PREFIX = "../loancenter/rest/";
+  // var API_URL_PREFIX = "https://pg1.newfi.com/loancenter/rest/";
     /**
      * Setup several app-wide collections:
      * 1. dict:
@@ -30,7 +31,7 @@
           'zipcode':            'Zip Code',
           'residencetype':      'Property Type',
           'propertyuse':        'Property Use',
-          'creditscore':        'Credit Score',
+          'creditscore':        'Est. Credit Score',
           'purchaseprice':      'Purchase Price',
           'downpaymentpercent': 'Down Payment',
           'estval':             'Est. Home Value',
@@ -92,18 +93,21 @@
 
         'program_product_sort': {
           'CONFORMING':     100,
-          'NONCONFORMING':  200,
-          'FHA':            300,
-          'FHA-Streamline': 400
+          'DELEGATED JUMBO':200,
+          'NONCONFORMING':  300,
+          'FHA':            400,
+          'FHA-Streamline': 500
         },
 
         'program_name_sort': {
-          '30 year Fixed': 10,
-          '15 year Fixed': 20,
-          '20 year Fixed': 30,
-          '10 year Fixed': 40,
-          '7 year ARM':    50,
-          '5 year ARM':    60
+          "30 YEAR Fixed": 10,          
+          "20 YEAR Fixed": 20,
+          "15 YEAR Fixed": 30,
+          "10 YEAR Fixed": 40,
+          "30 YEAR ARM"  : 50,
+          "10 YEAR ARM"  : 60,
+          "7 YEAR ARM"   : 70,
+          "5 YEAR ARM"   : 80
         },
 
         // Dynamic html templates
@@ -163,8 +167,9 @@
       lasearch = false,
       loanAdvisorList =[],
       loanAdvisorMap =[],
-      userRegistrationValidator = null
-      ;
+      userRegistrationValidator = null;
+
+      var notaryfeeLQB = 25;
 
     /**
      * function init()
@@ -185,9 +190,9 @@
 
       // Auto-format currency fields
       $('input[data-format-as-currency]').currencyInput();
-
+      $('input[data-format-span-as-currency]').currencyInput();
       // Initialize linked slider for purchase price»down payment fields
-      $('#downpaymentpercent').linkedPercentSlider();
+      //$('#downpaymentpercent').linkedPercentSlider();
 
       // Hide UI elements not in-use at outset
       dom.$loan_form__collect_details_stage.hide();
@@ -253,17 +258,43 @@
           if ($(this).valid()) {
             $('#basic-information').fadeOut(300);
             dom.$rate_list_error.fadeOut(300);
-            if(state.chosen_loan_type == 'refinance' || state.chosen_loan_type == 'cashout') {
+            if(state.chosen_loan_type == 'refinance') {
+
               var estVal = parseInt($('#estval').val().replace(/,/g, ''));
               var mortBal = parseInt($('#curmortgagebalance').val().replace(/,/g, ''));
 
               if(estVal < mortBal) {
+
                 $('#estval-compare-error').text('Property value must be higher than loan amount : ' + mortBal);
                 $('#estval-compare-error').css('display', 'block');
                 return false;
+
               } else {
+
                 $('#estval-compare-error').css('display', 'none');
                 submitLoanDetailsForm();
+
+              }
+
+            } else if(state.chosen_loan_type == 'cashout') {
+
+              var estVal = parseInt($('#estval').val().replace(/,/g, ''));
+              var mortBal = parseInt($('#curmortgagebalance').val().replace(/,/g, ''));
+              var cashout = parseInt($('#cashout').val().replace(/,/g, ''));
+              var total = mortBal + cashout;
+
+              if(estVal < total) {
+
+                $('#estval-compare-error').text('Property value must be higher than loan amount : ' + total);
+                $('#estval-compare-error').css('display', 'block');
+                
+                return false;
+
+              } else {
+
+                $('#estval-compare-error').css('display', 'none');
+                submitLoanDetailsForm();
+
               }
 
             } else {
@@ -276,7 +307,7 @@
           onkeyup: false,
           messages: {
             zipcode: {
-              remote:  jQuery.validator.format("Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR or WA")
+              remote:  jQuery.validator.format("Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR, WA, MD or IL")
             }
           },
           rules: {
@@ -388,7 +419,128 @@
      // });
      
    }
+   $('.numbersOnly').keyup(function () { 
+    this.value = this.value.replace(/[^0-9]/g,'');
+  });
+   $('.alphabetsOnly').keyup(function () { 
+    this.value = this.value.replace(/[^a-zA-Z]/g,'');
+  });
+  
+ 
+   $('#zipcode').on('keydown', function(e){
+      // Allow: backspace, delete, tab, escape, enter and .
+      if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
+           // Allow: Ctrl/cmd+A
+          (e.keyCode == 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: Ctrl/cmd+C
+          (e.keyCode == 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: Ctrl/cmd+X
+          (e.keyCode == 88 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: home, end, left, right
+          (e.keyCode >= 35 && e.keyCode <= 39)) {
+               // let it happen, don't do anything
+               return;
+      }
+      // Ensure that it is a number and stop the keypress
+      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+      }
+    });
 
+   $("#zipcodeMobile").on('keydown', function(e){
+      // Allow: backspace, delete, tab, escape, enter and .
+      if ($.inArray(e.keyCode, [46, 8, 9, 27, 13]) !== -1 ||
+           // Allow: Ctrl/cmd+A
+          (e.keyCode == 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: Ctrl/cmd+C
+          (e.keyCode == 67 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: Ctrl/cmd+X
+          (e.keyCode == 88 && (e.ctrlKey === true || e.metaKey === true)) ||
+           // Allow: home, end, left, right
+          (e.keyCode >= 35 && e.keyCode <= 39)) {
+               // let it happen, don't do anything
+               return;
+      }
+      // Ensure that it is a number and stop the keypress
+      if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+          e.preventDefault();
+      }
+    });
+
+    var validateMobilezipcode=function(){
+      if($('#zipcodeMobile').val()!="" && $('#zipcodeMobile').val().length==5) {
+        $.ajax({
+            url:        API_URL_PREFIX+'states/zipCode',
+            type:       'GET',
+            datatype:   'text',
+            data:       {zipCode: function(){return $('#zipcodeMobile').val();}},
+            success: function(data){ 
+                  if(data.resultObject=="Valid ZipCode"){
+                      $('.zipcode_error').css('display','none');
+                      $('.zipcode_mobile').prop("disabled", false);                     
+                  }else{
+                      $('.zipcode_error').css('display','block');                    
+                      $('.zipcode_mobile').prop("disabled", true);
+                  }                   
+            }
+         });
+      }else{
+        $('.zipcode_mobile').prop("disabled", true);
+        $('.zipcode_error').css('display','none');
+      }
+    }
+    $('#email').blur(function(){   
+    // userRegistrationFormValidation();   
+      if($('#email').val()!="" && $('#email').val()!=undefined){
+        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+        if(pattern.test($('#email').val())){
+              var data={};
+              data.user={emailId:$('#email').val() + ":" + new Date().getTimezoneOffset()};
+                $.ajax({
+                url : API_URL_PREFIX+'shopper/validate',
+                type : 'POST',
+                dataType : 'text',
+                data : {'registrationDetails' : JSON.stringify(data)},
+                success : function(response) {
+                  var result = JSON.parse(response);
+                  if(result.resultObject) {
+                    $('.user-registration-error').hide();
+                      $('#registration-error').text("");
+                    $('#createAccSubmit').attr("disabled",false);        
+                    $('#createAccSubmit').css({"background-color":"rgb(253, 138, 16)"});
+                  }
+
+                  if(result.error) {
+                    if(result.error.message != "" && result.error.message != undefined) {
+                      $('.user-registration-error').show();
+                      $('#registration-error').text(result.error.message);
+                       $('#createAccSubmit').attr("disabled",true);
+                       $('#createAccSubmit').css({"background-color":"#d3d3d3"});
+                    }
+                  }
+                },
+                error: function (xhr) {
+                  console.log(xhr);
+                }
+              });
+        }else{
+             $('.user-registration-error').show();
+             $('#registration-error').text("Please enter  valid Email Id.");
+              $('#createAccSubmit').attr("disabled",true);
+              $('#createAccSubmit').css({"background-color":"#d3d3d3"});
+        }
+      }
+     
+    });
+
+    $('#zipcodeMobile').blur(validateMobilezipcode).keyup(validateMobilezipcode);
+    $("#zipcodeMobile").bind('paste', function(e) {
+        var ctl = $(this);
+        setTimeout(function() {
+            validateMobilezipcode();
+        }, 100);
+    });
+       
    function closeTooltips() {
       $('.c-tooltip').remove();
    }
@@ -407,7 +559,7 @@
      * Update UI state and manage DOM transitions when the rate type
      * selection has been changed.
      */
-    function switchRateTypes() {
+   function switchRateTypes() {
       var selected_ratetype = $('input[name=ratetype]:checked', dom.$ratetype_radioset).val();
       switch (selected_ratetype){
         case 'bestrate':
@@ -422,6 +574,9 @@
           $('.c-rates-listing__result:hidden').fadeIn(200);
           break;
       }
+   	$(".previewDetails").empty();
+  	$(".c-rates-listing__program_new tr").removeClass("activeRow");
+  	$(".c-rates-listing__program_new").removeClass("activeTable");
     }
 
     /*validation for user registration form */
@@ -436,7 +591,13 @@
             },
             email: {
               required : true,
-              email : true
+              //email : true,
+              emailValidation:true
+
+            },
+            primaryPhone: {
+              required : true,
+              phoneNumberValidation : true
             },
             newfiadvisor : {
               required : true
@@ -449,6 +610,7 @@
             fname: "Please enter your firstname",
             lname : "Please enter your lastname",
             email : "Please enter a valid email address",
+            primaryPhone : "Please enter a valid primary phone",
             newfiadvisor : "Please choose newfi loan advisor",
             newfiadvisorsname : "Please enter your advisor's name"
           }
@@ -469,12 +631,17 @@
             emailid: {
               required : true,
               email : true
+            },
+            primaryPhoneId: {
+              required : true,
+              phoneNumberValidation: true
             }
           },
           messages: {
             firstname: "Please enter your firstname",
             lastname : "Please enter your lastname",
-            emailid : "Please enter a valid email address"
+            emailid : "Please enter a valid email address",
+            primaryPhoneId : "Please enter a valid primary phone"
           }
         });
 
@@ -498,7 +665,7 @@
      * a rate are requested.
      * @param  {element} el The element that trigggered this call
      */
-    function showRateDetails(el) {
+   function showRateDetails(el) {
       
       var
         rateData = state.data_cache.rates.cleaned,
@@ -507,15 +674,12 @@
         program = rateData.programs[program_id],
         rate = rateData.programs[program_id].rates[rate_id]
         ;
-
-      dom.$ratetype_form__wrapper
-        .add(dom.$rates_listing__wrapper)
-        .not(':hidden').fadeOut(300, function() {
-          renderRateDetails(program, rate, program_id, rate_id);
-          dom.$rates_listing__wrapper.not(':visible').fadeIn(300);
-        });
-
-        sendTrackingEvent('viewed_rate');
+       	renderRateDetails(program, rate, program_id, rate_id);
+	   	$(".c-rates-listing__program_new").removeClass("activeTable");
+		$(".c-rates-listing__program_new tr").removeClass("activeRow");
+		$(el).parent().parent().addClass("activeRow");
+		$(el).parent().parent().parent().parent().addClass("activeTable");	
+       	sendTrackingEvent('viewed_rate');
 
     }
 
@@ -569,6 +733,7 @@
      */
     function regressToLoanDetails() {
       $('#basic-information').fadeIn(300);
+       dom.$rate_list_error.fadeOut(300);
       dom.$user_registration__wrapper
         .add(dom.$loan_summary)
         .add(dom.$ratetype_form__wrapper)
@@ -582,7 +747,36 @@
         if(userRegistrationValidator) {
           userRegistrationValidator.resetForm();
         }
-        
+        //adding code for diabling divs
+        if(!$.isEmptyObject(mobile_data)){ 
+          state = {
+            'loan_advisors': null,
+            'data_cache':    {
+              'rates':        {
+                'request':     null,
+                'response':    null,
+                'cleaned':     null
+              }
+            },
+            'chosen_loan_type': null,
+            'chosen_program':   null,
+            'chosen_rate':      null,
+            'tracking_events':         {
+              'entered_loan_details': false,
+              'viewed_rate':          false,
+              'selected_rate':        false
+            }
+          };         
+          $("#property_content").removeClass("active");
+          $(this).closest('.subhead').removeClass('active');
+          $(this).closest('.subhead').css('display','none');
+          $(".mainTab").removeAttr("style","display:none");
+         // $('.main_option1').css('display', 'none');
+          $(".subhead step-5").removeClass("active"); 
+          $('.mobile_rates-listing').css('display', 'none');
+          $('.mobile_rates-listing_error').css('display', 'none'); 
+          ScrollTo('home_content');       
+        }     
     }
 
     /**
@@ -614,7 +808,6 @@
      */
     function renderRateLoadingIndicator() {
       var template = config.templates.rate_loading_animation;
-
       dom.$rates_listing__wrapper.empty().show().append(template({}));
       toggleFieldsInLoanDetailsForm(state.chosen_loan_type);
 
@@ -644,8 +837,9 @@
         }
         ;
 
-        console.log(context)
-      dom.$rates_listing__wrapper.empty().append(template(context));
+        console.log(context);
+		$(".previewDetails").empty();
+      $("#previewDetails" + program_id + "-" + rate_id).append(template(context));
     }
 
     /**
@@ -669,13 +863,15 @@
         });
       } else {
         console.log(context)
-        if(context.programs.length > 0) {
-          dom.$rates_listing__wrapper.empty().append(template(context));
-          switchRateTypes();
-          dom.$rates_listing__wrapper.add(dom.$ratetype_form__wrapper).not(':visible').fadeIn(300);
-        } else {
-          dom.$rate_list_error.fadeIn(300);
-        }
+        if(context!==null){
+            if(context.programs.length > 0) {
+              dom.$rates_listing__wrapper.empty().append(template(context));
+              switchRateTypes();
+              dom.$rates_listing__wrapper.add(dom.$ratetype_form__wrapper).not(':visible').fadeIn(300);
+            } else {
+              dom.$rate_list_error.fadeIn(300);
+            }
+          }
         
       }
 
@@ -764,33 +960,65 @@
         ]
         ;
 
+      $('#primaryPhoneId').mask('(000) 000-0000');
+      $('#primaryPhone').mask('(000) 000-0000');
+
       context.rows.push({'label': 'Loan Type', 'value': dict.loantype_labels[chosen_type]});
+       // Iterate through fields and populate context object for summary template
+      if($.isEmptyObject(mobile_data)){
+              $.each(fields_to_summarize, function(i, field) {
+              var
+                label = dict.field_summary_labels[field],
+                el = document.getElementById(field),
+                value
+                ;
+              if(label=="Est. Credit Score"){
+                  value=$("#chanceSlider").text();
+              }else{
+                switch (el.tagName) {
+                  case 'INPUT' :
+                    value = (el.hasOwnProperty('calculatedValue')) ? el.calculatedValue : el.value;
+                    break;
+                  case 'SELECT' :
+                    value = el.options[el.selectedIndex].text;
+                    break;
+                  default:
+                    value = 'Cannot parse value for this input type';
+                }
+                if ($.inArray(el.name, inputsToFormatAsCurrency) >= 0) {
+                value = accounting.formatMoney(value, {precision: 0});
+              }
+            }
+
+              
+
+              context.rows.push({'label': label, 'value': value});
+            });
+        }else{
+            $.each(fields_to_summarize, function(i, field) {
+              
+                var
+                label = dict.field_summary_labels[field],
+                el = document.getElementById(field),
+                value
+                ;
+                if(field=="residencetype" || field=="propertyuse" || field=="creditscore" || field=="downpaymentpercent" || field=="fha"){
+                    var fieldname=field+"_text";
+                    value=mobile_data[fieldname];
+                }else{
+                    value=mobile_data[field];
+                }
+                if ($.inArray(field, inputsToFormatAsCurrency) >= 0) {
+                  value = accounting.formatMoney(value, {precision: 0});
+                }  
+                context.rows.push({'label': label, 'value': value});
+
+               
+            });
+        }
 
       // Iterate through fields and populate context object for summary template
-      $.each(fields_to_summarize, function(i, field) {
-        var
-          label = dict.field_summary_labels[field],
-          el = document.getElementById(field),
-          value
-          ;
-
-        switch (el.tagName) {
-          case 'INPUT' :
-            value = (el.hasOwnProperty('calculatedValue')) ? el.calculatedValue : el.value;
-            break;
-          case 'SELECT' :
-            value = el.options[el.selectedIndex].text;
-            break;
-          default:
-            value = 'Cannot parse value for this input type';
-        }
-
-        if ($.inArray(el.name, inputsToFormatAsCurrency) >= 0) {
-          value = accounting.formatMoney(value, {precision: 0});
-        }
-
-        context.rows.push({'label': label, 'value': value});
-      });
+      
 
       dom.$loan_form__details_summary_injectionpoint.empty().append(template(context));
     }
@@ -851,25 +1079,50 @@
      *     teaserRates REST API.
      */
     function buildRatesDataRequestObj() {
-      var
-        // Shortcut to the chosen loan type
-        chosen_type = state.chosen_loan_type,
-        // Prepare values to add to return object
-        v = {
-          residencetype:      $('#residencetype').val(),
-          propertyuse:        $('#propertyuse').val(),
-          creditscore:        $('#creditscore').val(),
-          fha:                $('#fha').val(),
-          zipcode:            $('#zipcode').val(),
-          purchaseprice:      accounting.unformat($('#purchaseprice').val()),
-          downpaymentpercent: accounting.unformat($('#downpaymentpercent').val()),
-          estval:             accounting.unformat($('#estval').val()),
-          curmortgagebalance: accounting.unformat($('#curmortgagebalance').val()),
-          cashout:            accounting.unformat($('#cashout').val()),
-          curmortgagepayment: null, // see note above
-        };
+      if($.isEmptyObject(mobile_data)){
+        var
+          // Shortcut to the chosen loan type
+          chosen_type = state.chosen_loan_type,
+          // Prepare values to add to return object
+          v = {
+            residencetype:      $('#residencetype').val(),
+            propertyuse:        $('#propertyuse').val(),
+            creditscore:        $("#chanceSlider").text(),
+            fha:                $('#fha').val(),
+            zipcode:            $('#zipcode').val(),
+            purchaseprice:      accounting.unformat($('#purchaseprice').val()),
+            downpaymentpercent: accounting.unformat($('#downpaymentpercent').val()),
+            estval:             accounting.unformat($('#estval').val()),
+            curmortgagebalance: accounting.unformat($('#curmortgagebalance').val()),
+            cashout:            accounting.unformat($('#cashout').val()),
+            curmortgagepayment: null, // see note above
+          };
+        }else{
+          var
+          // Shortcut to the chosen loan type
+          chosen_type = state.chosen_loan_type,
+          // Prepare values to add to return object
+           v = {
+              residencetype:      mobile_data.residencetype,
+              residencetype_text: mobile_data.residencetype_text,
+              propertyuse:        mobile_data.propertyuse,
+              propertyuse_text:   mobile_data.propertyuse_text,
+              creditscore:        mobile_data.creditscore,
+              creditscore_text:   mobile_data.creditscore_text,
+              fha:                mobile_data.fha,
+              fha_text:           mobile_data.fha_text,
+              zipcode:            mobile_data.zipcode,
+              purchaseprice:      mobile_data.purchaseprice,
+              downpaymentpercent: mobile_data.downpayment,
+              estval:             accounting.unformat(mobile_data.estval),
+              curmortgagebalance: accounting.unformat(mobile_data.curmortgagebalance),
+              cashout:            accounting.unformat(mobile_data.cashout),
+              curmortgagepayment: null, // see note above
+              downpaymentpercent_text:mobile_data.downpaymentpercent_text,
+            };
 
-      // DRY: calculate downpayment in dollars
+        }
+       // DRY: calculate downpayment in dollars
       v.downpaymentdollars   = v.purchaseprice * v.downpaymentpercent / 100;
 
       // Return an object suitable for the chosen loan type
@@ -879,14 +1132,14 @@
             'loanType':        'PUR',
             'purchaseDetails': {
               'livingSituation': 'homeOwner',
-              'housePrice':      v.purchaseprice,
-              'loanAmount':      v.purchaseprice - v.downpaymentdollars,
+              'housePrice':      Math.round(v.purchaseprice),
+              'loanAmount':      Math.round(v.purchaseprice - v.downpaymentdollars),
               'zipCode':         v.zipcode
             },
             'livingSituation':        'renting',
-            'homeWorthToday':         v.purchaseprice,
-            'currentMortgageBalance': v.downpaymentdollars,
-            'loanAmount':             v.purchaseprice - v.downpaymentdollars,
+            'homeWorthToday':         Math.round(v.purchaseprice),
+            'currentMortgageBalance': Math.round(v.downpaymentdollars),
+            'loanAmount':            Math.round(v.purchaseprice - v.downpaymentdollars),
             'propertyType':           v.residencetype,
             'residenceType':          v.propertyuse,
             'zipCode':                v.zipcode,
@@ -898,15 +1151,15 @@
           return {
             'loanType':               'REF',
             'refinanceOption':        'REFLMP',
-            'currentMortgageBalance': v.curmortgagebalance,
-            'loanAmount':             v.curmortgagebalance,
+            'currentMortgageBalance': Math.round(v.curmortgagebalance),
+            'loanAmount':             Math.round(v.curmortgagebalance),
             'subordinateFinancing':   null,
-            'currentMortgagePayment': v.curmortgagepayment,
+            'currentMortgagePayment': Math.round(v.curmortgagepayment),
             'isIncludeTaxes':         null,
             'impounds':               'YES',
-            'propTaxMonthlyOryearly': 'Year',
-            'propInsMonthlyOryearly': 'Year',
-            'homeWorthToday':         v.estval,
+            //'propTaxMonthlyOryearly': 'Year',
+            //'propInsMonthlyOryearly': 'Year',
+            'homeWorthToday':         Math.round(v.estval),
             'propertyType':           v.residencetype,
             'residenceType':          v.propertyuse,
             'zipCode':                v.zipcode,
@@ -919,16 +1172,16 @@
           return {
             'loanType':               'REF',
             'refinanceOption':        'REFCO',
-            'cashTakeOut':            v.cashout,
-            'currentMortgageBalance': v.curmortgagebalance,
-            'loanAmount':             v.cashout + v.curmortgagebalance,
+            'cashTakeOut':            Math.round(v.cashout),
+            'currentMortgageBalance': Math.round(v.curmortgagebalance),
+            'loanAmount':             Math.round(v.cashout + v.curmortgagebalance),
             'subordinateFinancing':   null,
-            'currentMortgagePayment': v.curmortgagepayment,
+            'currentMortgagePayment': Math.round(v.curmortgagepayment),
             'isIncludeTaxes':         null,
             'impounds':               'YES',
-            'propTaxMonthlyOryearly': 'Year',
-            'propInsMonthlyOryearly': 'Year',
-            'homeWorthToday':         v.estval,
+           // 'propTaxMonthlyOryearly': 'Year',
+            //'propInsMonthlyOryearly': 'Year',
+            'homeWorthToday':         Math.round(v.estval),
             'propertyType':           v.residencetype,
             'residenceType':          v.propertyuse,
             'zipCode':                v.zipcode,
@@ -947,7 +1200,7 @@
       var
         cache = state.data_cache.rates,
         fresh_request = buildRatesDataRequestObj();
-
+      
       // Avoid calling the API if we already queried it recently with identical paramaters
       if (attempt > 4) {
         // Abort if we've tried getting data too many times.
@@ -965,17 +1218,19 @@
         // Parse remote data immediately, so it's available for subsequent actions
         cache.response
           .done(function(data){
-            cache.cleaned = tranformRatesData(JSON.parse(data));
-            console.log(cache.cleaned);
+            if(data!=""){
+              cache.cleaned = tranformRatesData(JSON.parse(data));
+              console.log(cache.cleaned);
 
             // Wait to render rates table when we hav valid data
 
-            if(cache.cleaned.programs.length > 0) {
-              dom.$rate_list_error.fadeOut(300);
-              renderRatesTable();
-            } else {
-              console.log('no data fetched from the server for this query...........');
-              renderError();
+              if(cache.cleaned.programs.length > 0) {
+                dom.$rate_list_error.fadeOut(300);
+                renderRatesTable();
+              } else {
+                console.log('no data fetched from the server for this query...........');
+                renderError();
+              }
             }
             
           })
@@ -1024,7 +1279,7 @@
      */
     function populateLoanAdvisorListFromRemote() {
       jQuery.ajax({
-        url:      '/NewfiWeb/rest/shopper/lasearch',
+        url:      '/loancenter/rest/shopper/lasearch',
         type:     'GET',
         datatype: 'application/json',
         data:     request_obj,
@@ -1079,9 +1334,11 @@
     function submitLoanDetailsForm() {
       // Build and show summary of details (and hide details form)
       renderDetailsSummary();
-      dom.$loan_form.slideUp(300).fadeOut(100);
-      dom.$loan_summary.slideDown(300);
-      dom.$ratetype_form__wrapper.slideDown(300);
+      if($.isEmptyObject( mobile_data)){
+        dom.$loan_form.slideUp(300).fadeOut(100);
+        dom.$loan_summary.slideDown(300);
+        dom.$ratetype_form__wrapper.slideDown(300);
+      }
 
       // Request rates data and rendering of data when we recceive it
       getRatesData(1);
@@ -1124,7 +1381,7 @@
             }
           }
         }
-  	  });
+      });
     }
 
     /**
@@ -1159,6 +1416,7 @@
       user_query.firstName = $('#firstname').val();
       user_query.lastName = $('#lastname').val();
       user_query.emailId = $('#emailid').val() + ":" + new Date().getTimezoneOffset();
+      user_query.phoneNumber = $('#primaryPhoneId').val().replace(/[()$,\s-]/g, '').trim();
 
       // var requestData = buildUserRegistrationData();
       // var validateUser = validateUserDetails(requestData);
@@ -1188,7 +1446,8 @@
         v = {
           'firstName' : $('#fname').val(),
           'lastName' : $('#lname').val(),
-          'emailId' : $('#email').val() + ":" + new Date().getTimezoneOffset()
+          'emailId' : $('#email').val() + ":" + new Date().getTimezoneOffset(),
+          'phoneNumber' : $('#primaryPhone').val().replace(/[()$,\s-]/g, '').trim()
         };
 
       // Return an object suitable for the chosen loan type
@@ -1198,7 +1457,7 @@
             'loanType': {
               "loanTypeCd": "PUR"
             },
-            'monthlyRent' : cache.purchaseDetails.housePrice,
+            'monthlyRent' : '',
             'purchaseDetails': {
               'livingSituation': 'renting',
               'housePrice':      cache.purchaseDetails.housePrice,
@@ -1206,15 +1465,16 @@
               'buyhomeZipPri':   cache.purchaseDetails.zipCode
             },
             "propertyTypeMaster": {
-          		'propertyTypeCd': cache.propertyType,
-          		'residenceTypeCd': cache.residenceType,
-          		'homeZipCode': cache.zipCode
-          	},
+              'propertyTypeCd': cache.propertyType,
+              'residenceTypeCd': cache.residenceType,
+              'homeZipCode': cache.zipCode
+            },
             'loanAmount':             cache.loanAmount,
             'user' : {
               'firstName': v.firstName,
-          		'lastName': v.lastName,
-          		'emailId': v.emailId
+              'lastName': v.lastName,
+              'emailId': v.emailId,
+              'phoneNumber' : v.phoneNumber
             }
           };
           break;
@@ -1222,26 +1482,27 @@
         case 'refinance':
           return {
             'loanType':               {
-            		"loanTypeCd": "REF"
-            	},
+                "loanTypeCd": "REF"
+              },
               "refinancedetails": {
-            		"refinanceOption": "REFLMP",
-            		"currentMortgageBalance": cache.currentMortgageBalance,
-            		"includeTaxes": cache.isIncludeTaxes
-            	},
+                "refinanceOption": "REFLMP",
+                "currentMortgageBalance": cache.currentMortgageBalance,
+                "includeTaxes": cache.isIncludeTaxes
+              },
               "propertyTypeMaster": {
             		"homeWorthToday": cache.homeWorthToday,
             		"homeZipCode": cache.zipCode,
-            		"propTaxMonthlyOryearly": cache.propTaxMonthlyOryearly,
-            		"propInsMonthlyOryearly": cache.propInsMonthlyOryearly,
+            		//"propTaxMonthlyOryearly": cache.propTaxMonthlyOryearly,
+            		//"propInsMonthlyOryearly": cache.propInsMonthlyOryearly,
             		"propertyTypeCd": cache.propertyType,
             		"residenceTypeCd": cache.residenceType
             	},
             'loanAmount': cache.loanAmount,
             'user' : {
               'firstName': v.firstName,
-          		'lastName': v.lastName,
-          		'emailId': v.emailId
+              'lastName': v.lastName,
+              'emailId': v.emailId,
+              'phoneNumber' : v.phoneNumber
             }
           };
           break;
@@ -1249,27 +1510,28 @@
         case 'cashout':
           return {
             'loanType':               {
-            		"loanTypeCd": "REF"
-            	},
+                "loanTypeCd": "REF"
+              },
               "refinancedetails": {
-            		"refinanceOption": "REFCO",
+                "refinanceOption": "REFCO",
                 "cashTakeOut": cache.cashTakeOut,
-            		"currentMortgageBalance": cache.currentMortgageBalance,
-            		"includeTaxes": cache.isIncludeTaxes
-            	},
+                "currentMortgageBalance": cache.currentMortgageBalance,
+                "includeTaxes": cache.isIncludeTaxes
+              },
               "propertyTypeMaster": {
             		"homeWorthToday": cache.homeWorthToday,
             		"homeZipCode": cache.zipCode,
-            		"propTaxMonthlyOryearly": cache.propTaxMonthlyOryearly,
-            		"propInsMonthlyOryearly": cache.propInsMonthlyOryearly,
+            		//"propTaxMonthlyOryearly": cache.propTaxMonthlyOryearly,
+            		//"propInsMonthlyOryearly": cache.propInsMonthlyOryearly,
             		"propertyTypeCd": cache.propertyType,
             		"residenceTypeCd": cache.residenceType
             	},
             'loanAmount': cache.loanAmount,
             'user' : {
               'firstName': v.firstName,
-          		'lastName': v.lastName,
-          		'emailId': v.emailId
+              'lastName': v.lastName,
+              'emailId': v.emailId,
+              'phoneNumber' : v.phoneNumber
             }
           };
           break;
@@ -1286,7 +1548,6 @@
         data : {'registrationDetails' : JSON.stringify(request_data)},
         success : function(response) {
           var result = JSON.parse(response);
-          console.log(result);
           if(result.resultObject) {
             console.log('validation success');
             $('.user-registration-error').hide();
@@ -1313,9 +1574,18 @@
     }
 
     function createUserAccount(registration_details) {
+      var programName= [state.chosen_program.name];
       var teaserRate = [state.chosen_rate.teaserRate];
+      var teaseRateReqObj = buildRatesDataRequestObj();
 
-      console.log(teaserRate)
+      console.log("1 " +teaserRate);
+
+      if (teaserRate && teaserRate[0]) {
+        teaserRate[0].loanProgram=programName[0];
+        teaserRate[0].closingCost = state.chosen_rate.total_closing_costs.toString();
+        teaserRate[0].payment = state.chosen_rate.mo_mortgage.toString();
+        _.merge(teaserRate[0], teaseRateReqObj);        
+      }      
 
       $.ajax({
         url : API_URL_PREFIX+'shopper/registration',
@@ -1379,8 +1649,16 @@
       }, 'This field is required');
 
       $.validator.addMethod('currencyNumber', function(value, element) {
+        if(element.name == "curmortgagebalance" && state.chosen_loan_type == "cashout" && value == undefined || value == "") { 
+          return false;
+        } 
+        
         value = accounting.unformat(value);
-        return !isNaN(value) && value * 1 > 0;
+        if (element.name == "curmortgagebalance" && state.chosen_loan_type == "cashout") {
+          return true;
+        } else {
+          return !isNaN(value) && value * 1 > 0;  
+        }        
       }, 'This field is required');
 
       $.validator.addMethod('zipCodeValidation', function(value, element) {
@@ -1389,8 +1667,33 @@
         } else {
           return true;
         }
-      }, 'Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR or WA');
+      }, 'Please enter a valid Zip Code in a Newfi approved state: AZ, CA, CO, FL, NJ, PA, OR, WA, MD or IL');
+
+      $.validator.addMethod('phoneNumberValidation', function(value, element) {
+        var val = value ? value.replace(/[()$,\s-]/g, '').trim() : "";
+        if(isNaN(val)) {
+          return false;
+        } else { 
+          if (val.length == 10) {
+            return true;  
+          } else {
+            false;
+          }          
+        }
+      }, 'Please enter a valid primary phone.');   
+     
+      $.validator.addMethod('emailValidation', function(value, element) {
+        var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
+        if(pattern.test(value)){
+          return true;
+        }else{
+          return false;
+        }
+      }, 'Please enter  valid Email Id.');      
     }
+
+       
+    
 
     /**
      * Helper to get a property value as a float from any object that has
@@ -1558,8 +1861,8 @@
 
         // Add the Program to our container, including only the properties we want to keep
         var program ={
-          'name':         raw_program.displayName,
-          'product_type': raw_program.productType,
+          'name':         raw_program.displayName.trim(),
+          'product_type': raw_program.productType.trim(),
           'rates':        []
         };
         program.display_name = program.name + program.product_type;
@@ -1570,6 +1873,7 @@
         // afer the loop.
         var lowest_rate_index = 0;
         var lowest_closing_index = 0;
+        var lowest_closing_value = undefined;
         var lowest_points_index = 0;
 
         // Iterate over the program's rates in the raw result object.
@@ -1602,6 +1906,7 @@
 
             'lender_costs': { // Total Est Lender Costs
               'lender_fee':              propValueOrDefault(raw_rate, 'lenderFee813', 0),
+              'application_fee':         propValueOrDefault(raw_rate, 'applicationFee', 0),
               'loanee_cost':             propValueOrDefault(raw_rate, 'creditOrCharge802', 0),
             },
 
@@ -1612,6 +1917,8 @@
               'lenders_title_ins':       propValueOrDefault(raw_rate, 'lendersTitleInsurance1104', 0),
               'closing_and_escrow_fees': propValueOrDefault(raw_rate, 'closingEscrowFee1102', 0),
               'recording_fees':          propValueOrDefault(raw_rate, 'recordingFees1202', 0), 
+              'ca_recording_fees':       propValueOrDefault(raw_rate, 'carecordingFees1200', 0), 
+              'notaryfee1110':           notaryfeeLQB,
               'other_fees':              sumOtherThirdPartyFees(raw_rate)
             },
 
@@ -1644,10 +1951,21 @@
 
           var lowest_closing = rate.total_closing_costs;
 
-
-          if ( lowest_closing == 0){
-            lowest_closing_index = raw_rate_index;
+          if (lowest_closing >= 0) {
+            if (lowest_closing_value == undefined) {
+              lowest_closing_value = lowest_closing;
+              lowest_closing_index = raw_rate_index;
+            } else {
+              if (lowest_closing <= lowest_closing_value){
+                  lowest_closing_value = lowest_closing;   
+                  lowest_closing_index = raw_rate_index;
+              }
+            }  
           }
+
+          // if ( lowest_closing == 0){
+          //   lowest_closing_index = raw_rate_index;
+          // }
 
           /**
            *
@@ -1700,20 +2018,29 @@
           }
 
         });
-
+        
         program.rates[lowest_rate_index].tags.push('lowestRate');
         program.rates[lowest_closing_index].tags.push('lowestClosing');
         program.rates[lowest_points_index].tags.push('lowestPoints');
 
       });
 
-      for(var i = 0; i < programs.length; i++) {
-        for(var j = programs[i].rates.length - 1; j >= 0; j--) {
-          if(programs[i].rates[j].total_closing_costs == 0 && programs[i].rates[j].tags[0] !== "lowestClosing") {
-            programs[i].rates.splice(j,1);
-          }
+      for(var i = programs.length-1; i >= 0; i--) {
+       // programs[i].product_type != "NONCONFORMING" &&
+        if(programs[i].product_type != 'DELEGATED JUMBO') {
+          programs.product_type = 'removeNonCon';
+          break;
         }
       }
+    
+      for(var j = programs.length-1; j >= 0; j--) {
+        if(programs.product_type == 'removeNonCon') {
+         // programs[j].product_type == "NONCONFORMING" ||
+          if(programs[j].product_type == 'DELEGATED JUMBO') {
+            programs.splice(j, 1);
+          }
+        }
+      } 
 
       // Sort programs into preferred order
       programs = _.sortBy(programs, [function(o) {
@@ -1723,35 +2050,1085 @@
           ;
         return (isNaN(i_name) || isNaN(i_program)) ? '9999999' : i_name + i_program;
       }]);
-
-      // console.log(programs)
-
-      for(var i = programs.length-1; i >= 0; i--) {
-        if(programs[i].product_type != "NONCONFORMING") {
-          programs.product_type = 'removeNonCon';
-          break;
-        }
-      }
-
-      for(var j = programs.length-1; j >= 0; j--) {
-        if(programs.product_type == 'removeNonCon') {
-          if(programs[j].product_type == "NONCONFORMING") {
-            programs.splice(j, 1);
-          }
-        }
-      }
-
+      
       if(programs.product_type) {
         delete programs['product_type'];
       }
 
-      // Add index properties to programs and rates, to be used in templates
-      return {'programs': programs};
+      // Display a maximum of 4 rates that are above lowest closing cost 
+      for (var i = 0; i < programs.length; i++) {
 
-      // Return our parsed object
-      return {'programs': programs};
+        // Sort data base on rate befor removing duplicate
+        var sortedData_befor_duplicate = _.sortBy(programs[i].rates, function(o) {
+          return o.rate;
+        });
+
+        // Remove duplicate record
+        var non_duplidated_data = _.uniqBy(sortedData_befor_duplicate, 'total_closing_costs'); 
+
+        // Find 0 closing cost index and removed top of zero closing cost record
+        var indexOfZero = _.findIndex(non_duplidated_data, function(o) { 
+          return o.total_closing_costs == 0; 
+        });
+
+        if (indexOfZero > 0) {
+          startIndexOfSlice = indexOfZero;
+          non_duplidated_data = _.slice(non_duplidated_data, [start=0], [end=indexOfZero+1])
+        }
+
+        // Sort by closing cost to take 4 lowest cllosing cost data
+        var sortedByClosingCost = _.sortBy(non_duplidated_data, function(o) {
+         return o.total_closing_costs;
+        });
+
+        // Slice data and take 4 records
+        var filterResutls = _.slice(sortedByClosingCost, [start=0], [end=4])
+
+        if (filterResutls && filterResutls.length > 0) {
+
+          // Remove lowestClosing or lowestRate tag if exist in results
+          _.forEach(filterResutls, function(resutls_data, resutls_index) { 
+            if (resutls_data.tags && resutls_data.tags.length > 0) {
+              _.remove(resutls_data.tags);
+            }
+          })
+
+          // Sort by closing cost to find lowest closing cost
+          var sortedByClosingCost = _.sortBy(filterResutls, function(o) {
+           return o.total_closing_costs;
+          });
+          sortedByClosingCost[0].tags.push('lowestClosing');
+
+          // Sort by rate to find lowest rate 
+          var sortedByRate = _.sortBy(sortedByClosingCost, function(o) {
+            return -o.rate;
+          });
+          sortedByRate[sortedByRate.length - 1].tags.push('lowestRate');
+
+          programs[i].rates = sortedByRate;  
+       }          
+      }
+	  var sortingArray=["30", "20", "15","10","7","5"];
+	  var finalSortedArray= [];
+	  var resultsnew=programs;
+	  for(i=0;i<sortingArray.length;i++){
+		  for(j=0;j<resultsnew.length;j++){
+			 // console.log(resultsnew[j].display_name);
+			  var programName=resultsnew[j].display_name;
+			  programName=programName.toLowerCase();
+			  var words = programName.split(" ");
+			if(words[0] === sortingArray[i]) {
+				 finalSortedArray.push(resultsnew[j]);
+				//console.log(finalSortedArray);
+			}
+			
+		  }
+	  }  
+				        
+      // Add index properties to programs and rates, to be used in templates
+     // return {'programs': programs};
+	 return {'programs': finalSortedArray};
+    }
+    
+   // Nav collaps in xs
+
+    $('.navbar-collapse a').click(function(){
+    $(".navbar-collapse").collapse('hide');
+    });
+    // Dropdown
+
+    $(".dropdown-menu li a").click(function(){
+      $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="pull-right glyphicon glyphicon-menu-down"></span>');
+      $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
+    });
+     function createSliders(){
+      if($.isEmptyObject(mobile_data)){
+         createRangeSliders('range_02','slide_range2','range_slider2',0,2000000,500000,10000);
+          createRangeSliders('range_03','slide_range3','range_slider3',0,500000,300000,5000); 
+          $('.range_slider3 .irs-max').text("$500,000");  
+          createRangeSliders('range_06','slide_range6','range_slider6',0,399500,40000,5000);
+          createRangeSliders('range_07','slide_range7','range_slider7',0,399500,40000,5000);
+           $('.range_slider7 .irs-min').text("$1"); 
+           $('.range_slider7 .irs-max').text("$399,500"); 
+          createRangeSliders('range_04','slide_range4','range_slider4',47000,2000000,470000,10000);  
+          createRangeSliders('range_05','slide_range5','range_slider5',0,430000,258000,5000); 
+          if($.isEmptyObject(mobile_data)){  
+            $('.zipcode_mobile').prop("disabled", true); 
+          }
+      }
     }
 
+
+    // tab content hide and show
+    var mobile_data={};
+    $(".tabPurchase").click (function(){
+        $(".purchase").addClass("selected"); // active 
+        $(".Refinance").removeClass("refin_selected");// remove active
+        $(".T_Case").removeClass("T_Case_selected");// remove active
+
+        $("#Purchase").addClass("active");
+        $("#Refinance").removeClass("active");
+        $("#Take_Case").removeClass("active");
+         $("#cashout_mobile").removeClass("active");
+        $(".mainTab").attr("style","display:none");
+        $('.sec_main_tab').css('display','block');
+        createSliders();        
+        state.chosen_loan_type="new-purchase";  
+        if(mobile_data.chosen_loan_type!="" && mobile_data.chosen_loan_type!="new-purchase")
+          mobile_data.estVal="";
+        mobile_data.chosen_loan_type="new-purchase";     
+
+    });
+
+    
+    $(".tabRefinance").click (function(){
+        $(".purchase").removeClass("selected"); // active 
+        $(".Refinance").addClass("refin_selected");// remove active
+        $(".T_Case").removeClass("T_Case_selected");// remove active
+        $("#Purchase").addClass("active");
+        $("#Refinance").addClass("active");
+        $("#Take_Case").removeClass("active");
+        $("#cashout_mobile").removeClass("active");
+        $(".mainTab").attr("style","display:none");
+        $('.sec_main_tab').css('display','block');
+        $('.sec_main_tab_cashout').css('display','none');
+        createSliders();
+        state.chosen_loan_type="refinance"; 
+        if(mobile_data.chosen_loan_type!="" && mobile_data.chosen_loan_type!="refinance")
+          mobile_data.estVal=""; 
+        mobile_data.chosen_loan_type="refinance";              
+    });
+
+    $(".tabT_Case").click (function(){
+        $(".purchase").removeClass("selected"); // remove active 
+        $(".Refinance").removeClass("refin_selected"); // remove active  
+        $(".T_Case").addClass("T_Case_selected"); //active 
+        $("#cashout_mobile").addClass("active");
+        $("#Refinance").removeClass("active");
+        $("#Take_Case").addClass("active");
+        $(".mainTab").attr("style","display:none");
+        $('.sec_main_tab_cashout').css('display','block');
+        $('.sec_main_tab').css('display','none');
+        createSliders();
+        state.chosen_loan_type="cashout";  
+         if(mobile_data.chosen_loan_type!="" && mobile_data.chosen_loan_type!="cashout")
+          mobile_data.estVal=""; 
+        mobile_data.chosen_loan_type="cashout";      
+        setTimeout(function() {$('.range_slider7 .irs-min').text('$1');$('.range_slider7 .irs-max').text('$399,500');}, 500);
+    });
+
+    $(".sec_next_tab_cashout").click (function(){
+       $(".purchase").removeClass("selected"); // remove active 
+        $(".Refinance").removeClass("refin_selected"); // remove active  
+        $(".T_Case").addClass("T_Case_selected"); //active 
+        $("#Purchase").addClass("active");
+        $("#cashout_mobile").removeClass("active");
+        $("#Refinance").removeClass("active");
+        $("#Take_Case").addClass("active");
+        $(".mainTab").attr("style","display:none");
+        $('.step-1-cahout').css('display','none');
+        $('.sec_main_tab_cashout').css('display','none');
+        $('.sec_main_tab').css('display','block');
+        mobile_data.cashout=accounting.unformat($("#range_07").val());  
+       });
+
+
+  // next step code start
+   $(".sec_next_tab").click (function(){
+          $("#property_content").addClass("active");
+          $("#Purchase").removeClass("active");
+          $(".sec_main_tab").attr("style","display:block");
+          $('.step-1').removeAttr("style","display:none");
+          $('.main_option1').css('display', 'block');
+          $(".step-5").attr("style","display:none");
+          $(".step-5").removeClass("active");
+          mobile_data.zipcode=$("#zipcodeMobile").val();                         
+      });
+
+   $(".Condo_tab").click (function(){
+          $(".third_next_tab").removeClass("selectedTab");
+          mobile_data.residencetype=$(this).data('property-type');
+          switch($(this).data('property-type')){
+            case 0:              
+                mobile_data.residencetype_text="Single Family";
+              break;
+            case 1:              
+                mobile_data.residencetype_text="Condo";
+              break;
+            case 2:              
+                mobile_data.residencetype_text="2 Units";
+              break;   
+            case 3:              
+                mobile_data.residencetype_text="3 Units";
+              break;
+            case 4:              
+                mobile_data.residencetype_text="4 Units";
+              break;
+          }
+          $(".Condo_tab").removeClass("selectedTab");
+          $("#select_property").addClass("active");
+          $("#property_content").removeClass("active");
+          $(".third_main_tab").attr("style","display:block");
+          $('.step-2').removeAttr("style","display:none");
+          $(".third_next_tab").removeClass("selectedTab");
+          $(this).addClass("selectedTab");
+        });
+
+  $(".Residence_tab").click (function(){
+          mobile_data.propertyuse=$(this).data('residence-type');
+          switch($(this).data('residence-type')){
+            case 0:              
+                mobile_data.propertyuse_text="Primary Residence";
+              break;
+            case 1:              
+                mobile_data.propertyuse_text="Vacation/Second Home";
+              break;
+            case 2:              
+                mobile_data.propertyuse_text="Investment Property";
+              break;           
+          }
+          $(".Residence_tab").removeClass("selectedTab");
+          $("#cradit_score").addClass("active");
+          $("#select_property").removeClass("active");
+          $(".forth_next_tab").attr("style","display:block");
+          $('.step-3').removeAttr("style","display:none");
+          $(".forth_next_tab").removeClass("selectedTab");
+          $(this).addClass("selectedTab");
+        });
+
+
+   $(".fifth_next_tab").click (function(){
+		mobile_data.creditscore=$("#slide_range_credit").text();
+		mobile_data.creditscore_text=$("#slide_range_credit").text();
+        switch(mobile_data.chosen_loan_type){
+          case "new-purchase":  
+            $("#pro_loc_content").addClass("active");
+            $("#cradit_score").removeClass("active");
+            $(".fifth_next_tab").attr("style","display:block");
+            $('.step-4').removeAttr("style","display:none");
+            break;
+          case "refinance":
+            $("#pro_loc_content_refinance").addClass("active");
+            $("#cradit_score").removeClass("active");
+            $(".fifth_next_tab").attr("style","display:block");
+            $('.step-4').removeAttr("style","display:none");
+            break;
+          case "cashout":
+            $("#pro_loc_content_cashout").addClass("active");
+            $("#cradit_score").removeClass("active");
+            $(".fifth_next_tab").attr("style","display:block");
+            $('.step-4').removeAttr("style","display:none");
+            break;
+        }  
+         
+       
+    });
+    $(".sixth_next_tab").click (function(){
+		$("#pro_loc_content_refinance_fha").addClass("active");
+        $("#pro_loc_content_refinance").removeClass("active");
+        $(".sixth_next_tab").attr("style","display:block");
+        $('#pro_loc_content_refinance').removeAttr("style","display:none");
+	});
+	// next step code end 
+    $(".loan-options").click (function(){  
+        switch(mobile_data.chosen_loan_type){
+          case "new-purchase":    
+              mobile_data.purchaseprice=accounting.unformat($("#range_01").val());
+              mobile_data.downpayment=accounting.unformat($("#per_range").val());
+              mobile_data.downpaymentpercent_text=$(".per_range_slider span#slide_per_range").text();
+              mobile_data.fha_text="";
+              $("#pro_loc_content").removeClass("active");
+			  $(".bac_optionLoanDetails").attr("style","display:block"); 
+              break;
+           case "refinance":
+              mobile_data.purchaseprice=0;
+              mobile_data.downpayment=0;
+              mobile_data.estval=accounting.unformat($("#range_02").val());
+              mobile_data.curmortgagebalance=accounting.unformat($("#range_03").val());
+              mobile_data.fha=$("#fha_m").val();
+              if($("#fha_m").val()=="FHA-Streamline"){
+                mobile_data.fha_text="Yes";
+              }else{
+                mobile_data.fha_text="No";
+              }              
+              mobile_data.downpaymentpercent_text="";
+			  $("#pro_loc_content_refinance_fha").removeClass("active");
+			  $(".bac_optionLoanDetails").attr("style","display:block"); 
+              break;  
+           case "cashout":
+              mobile_data.purchaseprice=0;
+              mobile_data.downpayment=0;
+              mobile_data.estval=accounting.unformat($("#range_04").val());
+              mobile_data.curmortgagebalance=accounting.unformat($("#range_05").val());
+              mobile_data.fha="";
+              mobile_data.fha_text="";
+              mobile_data.downpaymentpercent_text="";
+              if($('#range_06').val()==0){
+                mobile_data.cashout=accounting.unformat(1);
+              }else{
+               mobile_data.cashout=accounting.unformat($("#range_06").val());
+              }
+              
+			  $("#pro_loc_content_cashout").removeClass("active");
+			  $(".bac_optionLoanDetails").attr("style","display:block"); 
+			  break;     
+         }
+         $('.main_option1').css('display', 'block');
+         $(".mobile_rates-listing").css('display', 'block');
+         console.log(mobile_data);
+         submitLoanDetailsForm(); 
+     });
+
+      // one-step back code
+    $(".main_option1").click( function(){
+	     regressToLoanDetails();
+        mobile_data={};
+        state.chosen_loan_type=""; 
+        $('#mobile_form')[0].reset();    
+        $(this).closest('.subhead').removeClass('active');
+        $('.zipcode_mobile').prop("disabled", true);
+        $(".purchase").removeClass("selected");
+        $(".T_Case").removeClass("selected");
+        $(".Residence_tab").removeClass("selectedTab");    
+        $('.c-page-content__section').css('display', 'none');
+        $('.mobile_rates-listing').css('display', 'none');
+        $('.mobile_rates-listing_error').css('display', 'none');        
+        $('.u-margin-bottom-large').css('display', 'none');
+        $(".mainTab").removeClass("selected");
+        $(".mainTab").removeAttr("style","display:none");
+        $(".mainTab").removeAttr("style","display:none");
+       // $("#Purchase").removeClass("style","display:none");
+       $('#Purchase').css('display', 'none');
+        $("#Purchase").removeAttr("active");
+        $("#Refinance").removeClass("active");
+        $("#cashout_mobile").removeClass("active");
+        $("#cashout_mobile").css('display', 'none');
+        $(".Refinance").removeClass("refin_selected");
+        $(".T_Case").removeClass("T_Case_selected");         
+        $("#Take_Case").removeClass("active");
+        $("#cradit_score").removeClass("active");
+        $("#pro_loc_content").removeClass("active");
+        $("#pro_loc_content_refinance").removeClass("active");
+        $("#pro_loc_content_cashout").removeClass("active");
+        $("#property_content").removeClass("active");
+        $("#select_property").removeClass("active");
+		    $('#pro_loc_content_refinance_fha').removeClass("active");
+        $(".Condo_tab").removeClass("selectedTab");
+        $('.step-4').removeAttr("style","display:none");
+        $('.step-3').removeAttr("style","display:none");
+        $('.step-2').removeAttr("style","display:none");
+    		$(".bac_optionLoanDetails").attr("style","display:none"); 
+    		$('#pro_loc_content_refinance').removeAttr("style","display:none");
+    		$('#pro_loc_content_refinance_fha').removeAttr("style","display:none");
+        $('#zipcode1').val("");
+        if($("#range_01").data("ionRangeSlider"))
+          $("#range_01").data("ionRangeSlider").reset();   
+        if($("#range_02").data("ionRangeSlider"))     
+          $("#range_02").data("ionRangeSlider").reset();
+        if($("#range_03").data("ionRangeSlider")){
+          $("#range_03").data("ionRangeSlider").destroy();
+          createRangeSliders('range_03','slide_range3','range_slider3',0,500000,300000,5000); 
+           $('#slide_range3').text("$300,000");           
+        }
+        if($("#range_06").data("ionRangeSlider")){
+          $("#range_06").data("ionRangeSlider").destroy();
+          createRangeSliders('range_06','slide_range6','range_slider6',0,399500,40000,5000);
+           $('#slide_range6').text("$40,000"); 
+           var slider6 = $("#range_06").data("ionRangeSlider");
+           slider6.update({ from: "40000"});
+           
+        }
+        if($("#range_07").data("ionRangeSlider")){
+          $("#range_07").data("ionRangeSlider").destroy();
+          createRangeSliders('range_07','slide_range7','range_slider7',0,399500,40000,5000);
+           $('#slide_range7').text("$40,000"); 
+           var slider7 = $("#range_07").data("ionRangeSlider");
+           slider7.update({ from: "40000"});
+           $('.range_slider7 .irs-min').text("$1"); 
+           $('.range_slider7 .irs-max').text("$399,500"); 
+        }
+        if($("#range_04").data("ionRangeSlider")){
+          $("#range_04").data("ionRangeSlider").destroy();
+           createRangeSliders('range_04','slide_range4','range_slider4',47000,2000000,470000,10000); 
+           $('#slide_range4').text("$470,000"); 
+           var slider4 = $("#range_04").data("ionRangeSlider");
+           slider4.update({ from: "470000"});
+        }
+        if($("#range_05").data("ionRangeSlider")){
+          $("#range_05").data("ionRangeSlider").destroy();
+           createRangeSliders('range_05','slide_range5','range_slider5',0,430000,258000,5000); 
+          $('#slide_range5').text("$258,000"); 
+          $('.range_slider5 .irs-max').text("$430,000");
+          var slider5 = $("#range_05").data("ionRangeSlider");
+           slider5.update({ from: "258000"});
+        }
+        
+        if($("#per_range").data("ionRangeSlider"))
+          $("#per_range").data("ionRangeSlider").reset();
+        if($("#credit_score_slider").data("ionRangeSlider"))
+          $("#credit_score_slider").data("ionRangeSlider").reset();     
+        crediScoreSlider();       
+        mobile_data.estVal="";      
+  });
+
+	$(".fha_Yes").click( function(){
+		$(".fha_Yes").addClass("fha_active");
+		$(".fha_No").removeClass("fha_active");
+		$("#fha_m").val("FHA-Streamline");
+	});
+
+	$(".fha_No").click( function(){
+		$(".fha_Yes").removeClass("fha_active");
+		$(".fha_No").addClass("fha_active");
+		$("#fha_m").val("0");
+	});
+
+  $(".back6_option").click( function(){
+        $(".mainTab").removeAttr("style","display:none");        
+        $(this).closest('.subhead').removeClass('active');
+        $(this).closest('.subhead').css('display','none');
+    });
+  $(".back_option").click( function(){
+        switch(mobile_data.chosen_loan_type){
+            case "new-purchase":   
+              $(".mainTab").removeAttr("style","display:none");        
+              $(this).closest('.subhead').removeClass('active');
+              $(this).closest('.subhead').css('display','none');
+              break;
+            case "refinance":
+              $(".mainTab").removeAttr("style","display:none");        
+              $(this).closest('.subhead').removeClass('active');
+              $(this).closest('.subhead').css('display','none');
+              break;
+             case "cashout" :
+               $(this).closest('.subhead').removeClass('active');
+                $(this).closest('.subhead').css('display','none');
+                $('.subhead.step-1 .sec_main_tab_cashout').css('display','block');
+                $('.subhead.step-1-cahout').css('display','block'); 
+                $('.sec_main_tab_cashout').css('display','block'); 
+                setTimeout(function() { $('.range_slider7 .irs-min').text("$1"); 
+           $('.range_slider7 .irs-max').text("$399,500"); }, 250);
+             break;
+          }
+    });
+
+    $(".back1_option").click( function(){
+      $(this).closest('.subhead').removeClass('active');
+      $(this).closest('.subhead').css('display','none');
+      $('.subhead.step-1 .sec_main_tab').css('display','block');
+      $('.subhead.step-1').css('display','block');
+	});
+    
+	$(".back2_option").click( function(){
+      $(this).closest('.subhead').removeClass('active');
+      $(this).closest('.subhead').css('display','none');
+      $('.subhead.step-2 .third_main_tab').css('display','block');
+      $('.subhead.step-2').css('display','block');
+    });
+
+    $(".back3_option").click( function(){
+      $(this).closest('.subhead').removeClass('active');
+      $(this).closest('.subhead').css('display','none');
+      $('.subhead.step-3 .forth_main_tab').css('display','block');
+      $('.subhead.step-3').css('display','block');
+    });
+
+    $(".back4_option").click( function(){
+      $(this).closest('.subhead').removeClass('active');
+      $(this).closest('.subhead').css('display','none');
+      $('.subhead.step-4 .fifth_next_tab').css('display','block');
+      $('.subhead.step-4').css('display','block');
+    });
+	
+	$(".back5_option").click( function(){
+      $(this).closest('.subhead').removeClass('active');
+      $(this).closest('.subhead').css('display','none');
+      $('.subhead.step-5 .sixth_next_tab').css('display','block');
+      $('.subhead.step-5#pro_loc_content_refinance').css('display','block');
+    });	
+	  
+//form Range slider
+	var slMaxVal = '';
+function createRangeSliders(sliderId,spanId,classId,minVal, maxVal, fromVal, stepVal){
+	$("#"+sliderId).ionRangeSlider({
+		type: "single",
+         min: minVal,
+        max: maxVal,
+        from: fromVal,
+        keyboard: true,
+        prefix:'$ ',
+        step: stepVal,
+        onStart: function (data) {
+            var current_val = data.from;
+           	if(current_val < 10000){
+      			$('#'+spanId).text("$1");
+      			}else{
+      				$('#'+spanId).text("$" + current_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));	
+      			}
+      			$('.' + classId + ' .irs-min').text('$1');
+            var max_value=data.max;
+            if(max_value == 2000000){
+              $('.' + classId + ' .irs-max').text('$2M+');
+            }else{
+              $('.' + classId + ' .irs-max').text("$" + max_value.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+            }           
+        },
+        onChange: function (data) {
+      			var current_val = data.from;
+      			if(current_val < 10000){
+      				 $('#'+spanId).text("$1");
+      			}
+      			if(current_val == 2000000){
+                      $('#'+spanId).text('Over $2 million');
+      				$('.' + classId + ' .irs-max').text('$2M+');
+      			}
+      			$('.' + classId + ' .irs-min').text('$1');
+             var max_value=data.max;
+            if(max_value == 2000000){
+              $('.' + classId + ' .irs-max').text('$2M+');
+            }else{
+              $('.' + classId + ' .irs-max').text("$" + max_value.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+            }
+            if(sliderId == "range_02"){
+              slMaxVal = parseInt(current_val);
+              mobile_data.estVal=slMaxVal;
+              var slider3 = $("#range_03").data("ionRangeSlider");
+              slider3.update({ from: data.from * 60/100, max: data.from});
+              if(current_val < 10000){$('#slide_range3').text("$1");$('.range_slider3 .irs-max').text('$1');}
+              if(current_val == 2000000){ $('.range_slider3 .irs-max').text('$2M+');}else{
+                $('.range_slider3 .irs-max').text('$' + current_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              }        
+              $('.range_slider3 .irs-min').text('$1');
+            }
+            if(sliderId == "range_04"){
+              slMaxVal = parseInt(current_val);
+              if(mobile_data.cashout==0){
+                var slider6val=1;
+              }else{
+                var slider6val=parseInt(mobile_data.cashout);
+              }
+              mobile_data.estVal=slMaxVal;
+              var slider5Endvalue=parseInt(slMaxVal-slider6val);
+              var slider5 = $("#range_05").data("ionRangeSlider");
+              slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+              $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));     
+            }
+            if(sliderId == "range_06"){
+              if(current_val==0){
+                slMaxVal = parseInt(1);
+              }else{
+                slMaxVal = parseInt(current_val);
+              }
+               $('#slide_range6').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              var slider4val=parseInt($('#range_04').val());
+              var slider5Endvalue=parseInt(slider4val-slMaxVal);
+              var slider5 = $("#range_05").data("ionRangeSlider");
+              slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+              $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+             if($('#range_06').val()==0){
+                var slider6val=1;
+              }else{
+                var slider6val=parseInt($('#range_06').val());
+              }
+              var slider4 = $("#range_04").data("ionRangeSlider");
+
+              slider4.update({ from: 470000, min:Math.ceil((slider6val/.85)/10000)*10000,max: 2000000});
+              $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));  
+            }
+             $('#'+spanId).text('$' + current_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+            if(sliderId != "range_04" &&  sliderId != "range_05"){
+                 $('.' + classId + ' .irs-min').text('$1');
+            }
+            $('.range_slider2 .irs-max').text('$2M+');
+            $('.range_slider4 .irs-max').text('$2M');      
+            $('.range_slider5 .irs-min').text('$0');
+           
+        },
+		onUpdate: function (data) {
+      			var current_val = data.from;
+      			if(current_val < 10000){
+      				$('#'+spanId).text("$1");
+      			}
+            if(sliderId != "range_04" &&  sliderId != "range_05"){
+               $('.' + classId + ' .irs-min').text('$1');
+             }else{
+                $('.range_slider4 .irs-min').text('$47,059');
+                $('.range_slider5 .irs-min').text('$0');
+             }
+      			//$('.' + classId + ' .irs-min').text('$1');
+             var max_value=data.max;
+            if(max_value == 2000000){
+              $('.' + classId + ' .irs-max').text('$2M+');
+            }else{
+              $('.' + classId + ' .irs-max').text("$" + max_value.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+            }
+            if(sliderId == "range_02"){
+              slMaxVal = parseInt(current_val);
+              mobile_data.estVal=slMaxVal;
+              var slider3 = $("#range_03").data("ionRangeSlider");
+              slider3.update({ from: data.from * 60/100, max: data.from});
+              if(current_val < 10000){$('#slide_range3').text("$1");$('.range_slider3 .irs-max').text('$1');}
+              if(current_val == 2000000){ $('.range_slider3 .irs-max').text('$2M+');}else{
+                $('.range_slider3 .irs-max').text('$' + current_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              }        
+              $('.range_slider3 .irs-min').text('$1');
+            }
+            if(sliderId == "range_04"){
+              slMaxVal = parseInt(current_val);
+              if(mobile_data.cashout==0){
+                var slider6val=1;
+              }else{
+                var slider6val=parseInt(mobile_data.cashout);
+              }
+              mobile_data.estVal=slMaxVal;
+              var slider5Endvalue=parseInt(slMaxVal-slider6val);
+              var slider5 = $("#range_05").data("ionRangeSlider");
+              slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+              $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));     
+            }
+            if(sliderId == "range_06"){
+              if(current_val==0){
+                slMaxVal = parseInt(1);
+              }else{
+                slMaxVal = parseInt(current_val);
+              }
+              $('#slide_range6').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              var slider4val=parseInt($('#range_04').val());
+              var slider5Endvalue=parseInt(slider4val-slMaxVal);
+              var slider5 = $("#range_05").data("ionRangeSlider");
+              slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+              $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+              if($('#range_06').val()==0){
+                var slider6val=1;
+              }else{
+                var slider6val=parseInt($('#range_06').val());
+              }
+              var slider4 = $("#range_04").data("ionRangeSlider");
+              slider4.update({ from: 470000, min:Math.ceil((slider6val/.85)/10000)*10000,max: 2000000});
+              $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));  
+            }
+            if(sliderId != "range_04" &&  sliderId != "range_05"){
+                 $('.' + classId + ' .irs-min').text('$1');
+            }
+            $('.range_slider2 .irs-max').text('$2M+');
+            $('.range_slider4 .irs-max').text('$2M');      
+            $('.range_slider5 .irs-min').text('$0');
+                  
+		},
+		onFinish: function (data) {
+			var current_val = data.from;
+      if(sliderId == "range_05"){
+  			if(current_val < stepVal){
+  				$('#'+spanId).text("$0");
+  			}
+      }else{
+        if(current_val < stepVal){
+          $('#'+spanId).text("$1");
+        }
+      }
+      var max_value=data.max;
+            if(max_value == 2000000){
+              $('.' + classId + ' .irs-max').text('$2M+');
+            }else{
+              $('.' + classId + ' .irs-max').text("$" + max_value.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+            }
+			if(sliderId == "range_02"){
+				slMaxVal = parseInt(current_val);
+        mobile_data.estVal=slMaxVal;
+				var slider3 = $("#range_03").data("ionRangeSlider");
+				slider3.update({ from: data.from * 60/100, max: data.from});
+				if(current_val < 10000){$('#slide_range3').text("$1");$('.range_slider3 .irs-max').text('$1');}
+				if(current_val == 2000000){	$('.range_slider3 .irs-max').text('$2M+');}else{
+          $('.range_slider3 .irs-max').text('$' + current_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        }        
+				$('.range_slider3 .irs-min').text('$1');
+			}
+			if(sliderId == "range_04"){
+        slMaxVal = parseInt(current_val);
+        if(mobile_data.cashout==0){
+          var slider6val=1;
+        }else{
+          var slider6val=parseInt(mobile_data.cashout);
+        }
+        mobile_data.estVal=slMaxVal;
+        var slider5Endvalue=parseInt(slMaxVal-slider6val);
+        var slider5 = $("#range_05").data("ionRangeSlider");
+        slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+        $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));     
+        $('#slide_range5').text('$' + (slider5Endvalue*60/100).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+      }
+      if(sliderId == "range_06"){
+        if(current_val==0){
+          slMaxVal = parseInt(1);
+        }else{
+          slMaxVal = parseInt(current_val);
+        }
+         $('#slide_range6').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        mobile_data.cashout=slMaxVal;
+        var slider4val=parseInt($('#range_04').val());
+        var slider5Endvalue=parseInt(slider4val-slMaxVal);
+        var slider5 = $("#range_05").data("ionRangeSlider");
+        slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+        mobile_data.curmortgagebalance=parseInt($('#range_05').val());
+        $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        if($('#range_06').val()==0){
+          var slider6val=1;
+        }else{
+         var slider6val=parseInt($('#range_06').val());
+       }
+        var slider4 = $("#range_04").data("ionRangeSlider");
+        slider4.update({ from: 470000, min:Math.ceil((slider6val/.85)/10000)*10000,max: 2000000});
+        mobile_data.estVal=parseInt($('#range_04').val());
+        $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));  
+        //update slider7 value
+        var slider7 = $("#range_07").data("ionRangeSlider");
+        slider7.update({ from: slider6val});       
+        mobile_data.cashout=slider6val;
+      }
+      if(sliderId == "range_07"){
+        if(current_val==0){
+          slMaxVal = parseInt(1);
+        }else{
+          slMaxVal = parseInt(current_val);
+        }
+        var slider7val=parseInt(slMaxVal);
+        mobile_data.cashout=$('#range_07').val();
+        //update slider7 value
+        var slider6 = $("#range_06").data("ionRangeSlider");
+        slider6.update({ from: slider7val});
+
+        $('#slide_range6').text('$' + slider7val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        if(mobile_data.cashout==0){
+          var slider6val=1;
+        }else{
+         var slider6val=parseInt(mobile_data.cashout);
+       }
+         var slider4 = $("#range_04").data("ionRangeSlider");
+        slider4.update({ from: 470000, min:Math.ceil((slider6val/.85)/10000)*10000,max: 2000000});
+        mobile_data.estVal=parseInt($('#range_04').val());
+        $('.range_slider4 .irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));  
+        var slider4val=parseInt($('#range_04').val());
+        var slider5Endvalue=parseInt(slider4val-mobile_data.cashout);
+        var slider5 = $("#range_05").data("ionRangeSlider");
+        slider5.update({ from: (slider5Endvalue*60/100), max: slider5Endvalue});
+         mobile_data.curmortgagebalance=parseInt($('#range_05').val());
+        slider5defaultvalue=(slider5Endvalue*60/100);
+        $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        $('#slide_range5').text('$' + slider5defaultvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+      }
+
+      if(sliderId != "range_04" &&  sliderId != "range_05"){
+           $('.' + classId + ' .irs-min').text('$1');
+      }
+			$('.range_slider2 .irs-max').text('$2M+');
+      $('.range_slider4 .irs-max').text('$2M');      
+			$('.range_slider5 .irs-min').text('$0');
+		}
+    });
+}
+
+	// Range slider code
+	$('.forth_next_tab').click (function(){
+	  crediScoreSlider();
+	});
+
+	var range_val = 0 ;
+	var crediScoreSlider = function () {    
+	$("#credit_score_slider").ionRangeSlider({
+        type: "single",
+		range: "max",
+        min: 840,
+        max: 1120,
+        from: 920,
+		keyboard: true,
+        step: 1,
+		onStart: function (data) {
+			var cur_val = parseInt(data.from);
+			range_val = 840 - (cur_val - 840) ;
+            $('#slide_range_credit').html(range_val); 
+        },
+        onChange: function (data) {
+			var cur_val = parseInt(data.from);
+			range_val = 840 - (cur_val - 840) ;
+            $('#slide_range_credit').html(range_val); 
+        },
+        onFinish: function (data) {
+			var cur_val = parseInt(data.from);
+			range_val = 840 - (cur_val - 840) ;
+            $('#slide_range_credit').html(range_val); 
+        },
+        onUpdate: function (data) {
+			var cur_val = parseInt(data.from);
+			range_val = 840 - (cur_val - 840) ;
+            $('#slide_range_credit').html(range_val); 
+        }
+	});
+  }
+var est_amt = 0, p_price, per = 20, slide_range;
+  $('.fifth_next_tab').click (function () {
+    $("#range_01").ionRangeSlider({
+        type: "single",
+        min: 0,
+        max: 2000000,
+        from: 500000,
+        keyboard: true,
+        prefix:'$ ',
+        step: 10000,
+        max_postfix: 'M+',
+        onStart: function (data) {
+			var current_val = data.from;
+			if(current_val < 10000){
+				slide_range = "$1";
+				$(".range_slider #slide_range").text("$1");
+			}
+            var dis_min_val =  parseInt(current_val);
+            slide_range = '$' + dis_min_val;
+            var slide_range_val='$' + dis_min_val.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+            $('#slide_range').html(slide_range_val);
+            $('.range_slider .irs-max').text('$2M+');
+			if(slide_range == "Over $2 million") {p_price = "$2000000"}else{p_price = slide_range};
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+            slide_range = per + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+            $('#slide_per_range').html(slide_range);
+        },
+        onChange: function (data) {
+			var current_val = data.from;
+			var dis_min_val =  parseInt(current_val);
+			slide_range = '$' + dis_min_val;
+			if(current_val < 10000){
+				slide_range = "$1";
+				$(".range_slider #slide_range").text("$1");
+			}
+            if(current_val == 2000000){
+                slide_range = 'Over $2 million';
+			}
+			//  $('#slide_range').html(slide_range);
+            $('.range_slider .irs-max').text('$2M+');
+			if(slide_range == "Over $2 million") {p_price = "$2000000"}else{p_price = slide_range};
+			per = $("#slide_per_range").text().split("%")[0];
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+            slide_range = per + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+            $('#slide_per_range').html(slide_range);
+        },
+		onUpdate: function (data) {
+			var current_val = data.from;
+			var dis_min_val =  parseInt(current_val);
+			slide_range = '$' + dis_min_val;
+			if(current_val < 10000){
+				slide_range = "$1";
+				$(".range_slider #slide_range").text("$1");
+			}
+			if(current_val == 2000000){
+				slide_range = 'Over $2 million';
+			}
+			$('.range_slider .irs-max').text('$2M+');
+			if(slide_range == "Over $2 million") {p_price = "$2000000"}else{p_price = slide_range};
+			per = $("#slide_per_range").text().split("%")[0];
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+			slide_range = per + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+			$('#slide_per_range').html(slide_range);
+		},
+		onFinish: function (data) {
+			var current_val = data.from;
+			var dis_min_val =  parseInt(current_val);
+			slide_range = '$' + dis_min_val;
+			if(current_val < 10000){
+				slide_range = "$1";
+				$(".range_slider #slide_range").text("$1");
+			}
+			if(current_val == 2000000){
+				slide_range = 'Over $2 million';
+			}
+			$('.range_slider .irs-min').text('$1');
+			$('.range_slider .irs-max').text('$2M+');
+			if(slide_range == "Over $2 million") {p_price = "$2000000"}else{p_price = slide_range};
+			per = $("#slide_per_range").text().split("%")[0];
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+			slide_range = per + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+			$('#slide_per_range').html(slide_range);
+		}
+    });
+
+    
+
+    $("#per_range").ionRangeSlider({
+        type: "single",
+        min: 3,
+        max: 99,
+        from: 20,
+        keyboard: true,
+        step: 1,
+        postfix: '%',
+        onStart: function (data) {
+			var current_val = data.from;
+            var dis_min_val =  parseInt(current_val);
+			per = current_val;
+			p_price="$500000";
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+            var slide_range = dis_min_val + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+            $('#slide_per_range').html(slide_range);
+        },
+        onChange: function (data) {
+			var current_val = data.from;
+            var dis_min_val = 0;
+            var step = 1;
+			dis_min_val = parseInt(current_val);
+			per = current_val
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+            var slide_range = dis_min_val + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+			$('#slide_per_range').html(slide_range); 
+        },
+        onFinish: function (data) {
+			var current_val = data.from;
+			var dis_min_val = 0;
+			var step = 1;
+			dis_min_val = parseInt(current_val);
+			per = current_val
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+			var slide_range = dis_min_val + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+			$('#slide_per_range').html(slide_range);
+        },
+        onUpdate: function (data) {
+            var current_val = data.from;
+            var dis_min_val = 0;
+            var step = 1;
+            dis_min_val = parseInt(current_val);
+			per = current_val
+			est_amt = parseInt(p_price.toString().substring(1,p_price.length)) *  per / 100;
+            var slide_range = dis_min_val + '% ($'+ est_amt.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +')' ;
+            $('#slide_per_range').html(slide_range);
+        }
+	});
+  setTimeout(function() {
+		$('.range_slider .irs-max').text('$2M+');
+		$('.range_slider2 .irs-max').text('$2M+');
+    $('.range_slider3 .irs-max').text('$500,000');
+		$('.range_slider4 .irs-max').text('$2M');   
+    $('.range_slider6 .irs-max').text('$399,500');
+    $('.range_slider7 .irs-max').text('$399,500');
+    $('.range_slider').find('.irs-min').text('$1');
+    $('.range_slider2').find('.irs-min').text('$1');
+    $('.range_slider3').find('.irs-min').text('$1');
+    //$('.range_slider4').find('.irs-min').text('$47,059');
+    $('.range_slider5').find('.irs-min').text('$0');
+    $('.range_slider6').find('.irs-min').text('$1');
+    $('.range_slider7').find('.irs-min').text('$1');
+    //$('.range_slider5 .irs-max').text('$430,000');
+        if(mobile_data.chosen_loan_type=="refinance")
+         var slMaxVal=parseInt("500000"); 
+        else if(mobile_data.chosen_loan_type=="cashout")
+         var slMaxVal=parseInt("470000"); 
+        
+        if(mobile_data.estVal!=undefined && mobile_data.estVal!=""){
+          slMaxVal = parseInt(mobile_data.estVal);
+          $('.range_slider3 .irs-max').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        }else{
+          if(slMaxVal!=undefined && slMaxVal!="" && mobile_data.chosen_loan_type!="cashout")
+            $('.range_slider3 .irs-max').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        }
+        if(mobile_data.cashout==0){
+            var slider6val=1;
+          }else{
+            var slider6val=parseInt(mobile_data.cashout);
+          }
+
+        var slider5Endvalue=parseInt(slMaxVal-slider6val);
+        $('.range_slider4').find('.irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"))
+        $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+
+	}, 300);
+  
+});
+   $( window ).on( "load", function() {
+		$('.range_slider').find('.irs-min').text('$1');
+		$('.range_slider2').find('.irs-min').text('$1');
+		$('.range_slider3').find('.irs-min').text('$1');
+		$('.range_slider4').find('.irs-min').text('$47,059');
+    $('.range_slider4').find('.irs-max').text('$2M');
+    $('.range_slider5').find('.irs-min').text('$0');
+		$('.range_slider5').find('.irs-max').text('$430,000');
+		$('.range_slider6').find('.irs-min').text('$1');
+    $('.range_slider6 .irs-max').text('$399,500');
+    $('.range_slider7').find('.irs-min').text('$1');
+    $('.range_slider7 .irs-max').text('$399,500');
+    $('.range_slider').find('.irs-max').text('$2M+');
+		$('.range_slider2').find('.irs-max').text('$2M+');
+  });
+     $(window).resize(function () {
+        setTimeout(function(){
+			$('.range_slider .irs-max').text('$2M+'); 
+			$('.range_slider').find('.irs-min').text('$1');
+			$('.range_slider2 .irs-max').text('$2M+');
+			$('.range_slider2').find('.irs-min').text('$1');
+			$('.range_slider3').find('.irs-min').text('$1');
+			$('.range_slider4 .irs-max').text('$2M');
+      $('.range_slider4').find('.irs-min').text('$47,059');
+			$('.range_slider5').find('.irs-min').text('$0'); 
+      $('.range_slider5').find('.irs-max').text('$430,000');
+      $('.range_slider6').find('.irs-min').text('$1'); 
+      $('.range_slider6').find('.irs-max').text('$399,500');
+      $('.range_slider7').find('.irs-min').text('$1'); 
+      $('.range_slider7').find('.irs-max').text('$399,500'); 
+        if(mobile_data.chosen_loan_type=="refinance")
+         var slMaxVal=parseInt("500000"); 
+        else if(mobile_data.chosen_loan_type=="cashout")
+         var slMaxVal=parseInt("470000"); 
+        if(mobile_data.estVal!=undefined && mobile_data.estVal!=""){
+          slMaxVal = parseInt(mobile_data.estVal);
+          $('.range_slider3 .irs-max').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        }else{
+          if(slMaxVal!=undefined && slMaxVal!="" && mobile_data.chosen_loan_type!="cashout")
+           $('.range_slider3 .irs-max').text('$' + slMaxVal.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+        }
+        if(mobile_data.cashout==0){
+            var slider6val=1;
+          }else{
+            var slider6val=parseInt(mobile_data.cashout);
+          }
+        var slider5Endvalue=parseInt(slMaxVal-slider6val);
+        $('.range_slider4').find('.irs-min').text('$' + Math.round(slider6val/.85).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"))
+        $('.range_slider5 .irs-max').text('$' + slider5Endvalue.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,"));
+
+  
+    }, 300);
+    });        
+	$('#creditscoreDesktop').on('input change', function(){
+		$('#chanceSlider').text(840 - ($('#creditscoreDesktop').val() - 840));
+		 if($('#chanceSlider').text() > "760")
+		var slideWidth = Math.ceil((($('#creditscoreDesktop').val() - 840) * 100) / (1120 - 840) + 4);
+		else
+			var slideWidth = Math.ceil((($('#creditscoreDesktop').val() - 840) * 100) / (1120 - 840));
+		$(".credit_score_runnable").width(Math.ceil(slideWidth) + "%");
+	});
+	$('#priceSlider').on('input change', function(){
+			var y = document.getElementById('priceSlider');
+			var purchasepriceNew = parseInt($("#purchaseprice").val().replace(/,/g, ""));
+			var dp = Math.round(purchasepriceNew * y.value / 100);
+			$(".c-linked-percent-slider__percent-value").text(y.value + "%");
+			if(dp >= 0)
+			$(".c-linked-percent-slider__numeric-value").text("($"+ dp.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +")");
+			 var overlayslider = y.value;
+			 if(y.value > 75)overlayslider = overlayslider - 3;
+			 if(y.value < 4)overlayslider = parseInt(overlayslider) + 1;
+			$(".overlayslider").css("width", overlayslider + "%");
+			$("#downpaymentpercent").val($(".c-linked-percent-slider__percent-value").text() + " " + $(".c-linked-percent-slider__numeric-value").text());
+	});
+	$( "#purchaseprice" ).keyup(function( event ) {
+		var y = document.getElementById("priceSlider");
+		var purchasepriceNew = parseInt($("#purchaseprice").val().replace(/,/g, ""));
+		var dp = Math.round(purchasepriceNew * y.value / 100);
+		$(".c-linked-percent-slider__percent-value").text(y.value + "%");
+		if(dp >= 0)
+		$(".c-linked-percent-slider__numeric-value").text("($"+ dp.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") +")");
+		$("#downpaymentpercent").val($(".c-linked-percent-slider__percent-value").text() + " " + $(".c-linked-percent-slider__numeric-value").text());
+	});
+	$(".collapsed-collapsed").on("click", function(){
+		$(".c-rates-listing__program_new").removeClass("activeTable");
+        $(".c-rates-listing__program_new tr").removeClass("activeRow");
+    });
     // Start the show!
     init();
 

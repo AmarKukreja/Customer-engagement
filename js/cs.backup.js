@@ -259,7 +259,7 @@
               required: true,
               zipCodeValidation: true,
               'remote':   {
-                url:        'https://www.newfi.com/NewfiWeb/rest/states/zipCode',
+                url:        'https://www.newfi.com/loancenter/rest/states/zipCode',
                 type:       'GET',
                 datatype:   'text',
                 data:       {zipCode: function(){return $('#zipcode').val();}},
@@ -971,7 +971,7 @@
     function getTeaserRateFromRemote(request_obj) {
       console.log(request_obj);
       return $.ajax({
-        url:      'https://www.newfi.com/NewfiWeb/rest/calculator/findteaseratevalue',
+        url:      'https://www.newfi.com/loancenter/rest/calculator/findteaseratevalue',
         type:     'POST',
         data:     {'teaseRate':  JSON.stringify(request_obj)},
         datatype: 'application/json',
@@ -985,7 +985,7 @@
      */
     function populateLoanAdvisorListFromRemote() {
       jQuery.ajax({
-        url:      '/NewfiWeb/rest/shopper/lasearch',
+        url:      '/loancenter/rest/shopper/lasearch',
         type:     'GET',
         datatype: 'application/json',
         data:     request_obj,
@@ -1053,7 +1053,7 @@
         if(!lasearch) {
           lasearch = true;
           $.ajax({
-            url : "https://www.newfi.com/NewfiWeb/rest/shopper/lasearch",
+            url : "https://www.newfi.com/loancenter/rest/shopper/lasearch",
             method : "GET",
             datatype: "application/json",
             success : function(response) {
@@ -1120,7 +1120,7 @@
       // var validateUser = validateUserDetails(requestData);
 
       $.ajax({
-        url: 'https://www.newfi.com/NewfiWeb/rest/shopper/record',
+        url: 'https://www.newfi.com/loancenter/rest/shopper/record',
         method: 'POST',
         dataType: 'text',
         data: {'registrationDetails' : JSON.stringify(user_query)},
@@ -1236,7 +1236,7 @@
 
     function validateUserDetails(request_data) {
       $.ajax({
-        url : 'https://www.newfi.com/NewfiWeb/rest/shopper/validate',
+        url : 'https://www.newfi.com/loancenter/rest/shopper/validate',
         type : 'POST',
         dataType : 'text',
         data : {'registrationDetails' : JSON.stringify(request_data)},
@@ -1271,7 +1271,7 @@
       console.log(teaserRate)
 
       $.ajax({
-        url : 'https://www.newfi.com/NewfiWeb/rest/shopper/registration',
+        url : 'https://www.newfi.com/loancenter/rest/shopper/registration',
         type : 'POST',
         dataType : 'text',
         data : {'registrationDetails' : JSON.stringify(registration_details), 'teaseRateData' : JSON.stringify(teaserRate)},
